@@ -1,0 +1,536 @@
+#include <Arduino_FreeRTOS.h>
+
+//Sol motor pinleri
+#define sol_ileri 8
+#define sol_geri 9
+#define sol_hiz 10
+
+//Sağ motor pinleri
+#define sag_ileri 13
+#define sag_geri 12
+#define sag_hiz 11
+
+//Ön sensör pinleri
+#define on_echo 52
+#define on_trig 50
+
+//Sağ ön sensör pinleri
+#define sag_on_echo 40
+#define sag_on_trig 38
+
+//Arka sensör pinleri
+#define arka_echo 51
+#define arka_trig 53
+
+//Sağ arka sensör pinleri
+#define sag_arka_echo 41
+#define sag_arka_trig 39
+
+//Kızılötesi modülü pini (3. pine bağlı ancak attachInterrupt ta 1 olarak gösterildi.)
+#define kizilotesi 3
+
+//Aracın bilgisi
+long arac_en = 20;
+long arac_boy = 30;
+
+//Sağ sensörler için değişkenler
+long sag_on_sure;
+long sag_arka_sure;
+
+long sag_on_uzaklik;
+long sag_arka_uzaklik;
+
+//Ön sensör için değişkenler
+long on_uzaklik;
+long on_sure;
+
+//Ön sensör için değişkenler
+long arka_uzaklik;
+long arka_sure;
+
+
+//Kızılötesi modülü için değişkenler
+//int dolu = 0;
+//int bos = 0;
+int sayac = 0;
+//bool durum;
+
+char data;
+
+int motorlar_hiz = 255;
+
+void setup()
+{ 
+  //Motorlar
+  pinMode(sol_ileri, OUTPUT);
+  pinMode(sag_ileri, OUTPUT);
+  pinMode(sol_geri, OUTPUT);
+  pinMode(sag_geri, OUTPUT);
+  pinMode(sol_hiz, OUTPUT);
+  pinMode(sag_hiz, OUTPUT);
+
+  //Sensörler
+  pinMode(on_trig, OUTPUT);
+  pinMode(on_echo, INPUT);
+  pinMode(arka_trig, OUTPUT);
+  pinMode(arka_echo, INPUT);
+  pinMode(sag_on_trig, OUTPUT);
+  pinMode(sag_on_echo, INPUT);
+  pinMode(sag_arka_trig, OUTPUT);
+  pinMode(sag_arka_echo, INPUT);
+
+  //Kızılötesi modülü
+  //pinMode(kizilotesi, INPUT);
+  //attachInterrupt(1, say, RISING);
+
+  //Görevler
+  xTaskCreate(gorev1,"Servo Motor", 100, NULL, 3, NULL);
+  xTaskCreate(gorev2,"Servo Motor", 100, NULL, 2, NULL);
+  xTaskCreate(gorev3,"Servo Motor", 100, NULL, 1, NULL);
+  xTaskCreate(gorev4,"Servo Motor", 100, NULL, 0, NULL);
+
+  Serial.begin(9600);
+
+}
+
+//Sayaç fonksiyonu
+void say()
+{
+  sayac++;
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+}
+
+void gorev1(void *pvParameters)
+{
+  for(;;)
+  {
+    //kizilotesi modülünden bir veri gelirse, 1 yani doğrudur ve if sağlanır
+    if(Serial.available())
+    {
+      //Gelen komutu data değişkininde tut
+      data = Serial.read();
+      Serial.println(data);
+
+      //data 1 ise araç ileri gitsin.
+      if(data == '1')
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+    
+        vTaskDelay(6/portTICK_PERIOD_MS);
+    
+        //İleri
+        digitalWrite(sol_ileri, 1);
+        digitalWrite(sag_ileri, 1);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, motorlar_hiz);
+        analogWrite(sag_hiz, motorlar_hiz);
+      }
+
+      //data 2 ise araç geri gitsin.
+      else if(data == '2')
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+    
+        vTaskDelay(6/portTICK_PERIOD_MS);
+    
+        //Geri
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 1);
+        digitalWrite(sag_geri, 1);
+        
+        analogWrite(sol_hiz, motorlar_hiz);
+        analogWrite(sag_hiz, motorlar_hiz);
+      }
+
+      //data 3 ise araç sola gitsin.
+      else if(data == '3')
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+    
+        vTaskDelay(6/portTICK_PERIOD_MS);
+  
+        //Sol
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 1);
+        digitalWrite(sol_geri, 1);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, motorlar_hiz);
+        analogWrite(sag_hiz, motorlar_hiz);
+
+        //Sayacı başlat
+        data = 'a';
+  
+      }
+
+      //data 4 ise araç sağa gitsin.
+      else if(data == '4')
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+    
+        vTaskDelay(6/portTICK_PERIOD_MS);
+    
+        //Sağ
+        digitalWrite(sol_ileri, 1);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 1);
+        
+        analogWrite(sol_hiz, motorlar_hiz);
+        analogWrite(sag_hiz, motorlar_hiz);
+
+        //Sayacı başlat
+        data = 'a';
+      }
+
+      //data 6 ise araç dursun.
+      else if(data == '6')
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+      }
+
+      //data 7 ise araç dik park etsin.
+      else if(data == '7')
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+    
+        vTaskDelay(6/portTICK_PERIOD_MS);
+
+        //İleri
+        digitalWrite(sol_ileri, 1);
+        digitalWrite(sag_ileri, 1);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, motorlar_hiz);
+        analogWrite(sag_hiz, motorlar_hiz);
+
+        //Sağ ön ve sağ arka sensörleri başlat.
+        data = 'c';
+      }
+        
+    }
+    
+    vTaskDelay(300/portTICK_PERIOD_MS);
+  }
+}
+
+void gorev2(void *pvParameters)
+{
+  vTaskDelay(100/portTICK_PERIOD_MS);
+  for(;;)
+  {
+    //Araç sağa veya sola döndüğünde sayaç çalışsın ve uygun değere ulaştığında araç dursun.
+    if(data == 'a')
+    {
+      attachInterrupt(1, say, RISING);
+      
+      Serial.print("sayac :");
+      Serial.println(sayac);
+
+      if(sayac > 100)
+      {
+        detachInterrupt(1);
+        
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+        
+        Serial.println("Dönüş gerçekleştirildi");
+
+        //Sayacı sıfırla
+        sayac = 0;
+        
+        //datayı sıfırladım.
+        data = 'z';
+      }
+    }
+
+    //Dik park ederken sağ dönüş için sayaç çalışsın ve uygun değere ulaştığında araç dursun.
+    else if(data == 'b')
+    {
+      attachInterrupt(1, say, RISING);
+      
+      Serial.print("sayac :");
+      Serial.println(sayac);
+
+      if(sayac > 100)
+      {
+        detachInterrupt(1);
+        
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+        
+        Serial.println("Dönüş gerçekleştirildi");
+
+        vTaskDelay(100/portTICK_PERIOD_MS);
+    
+        //İleri
+        digitalWrite(sol_ileri, 1);
+        digitalWrite(sag_ileri, 1);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, motorlar_hiz);
+        analogWrite(sag_hiz, motorlar_hiz);
+
+        //Sayacı sıfırla
+        sayac = 0;
+
+        //data 1 değerini ön sensörün çalışması için verdim.
+        data = '1';
+      }
+    }
+
+    vTaskDelay(300/portTICK_PERIOD_MS);
+  }
+}
+
+void gorev3(void *pvParameters)
+{
+  vTaskDelay(200/portTICK_PERIOD_MS);
+  for(;;)
+  {
+    //Araç ileri gidiyorsa ön sensörden bilgi al ve 15cm'den yakın bir cisim varsa dur.
+    if(data == '1')
+    {
+      //Ön sensörü pasif hale getir.
+      digitalWrite(on_trig, 0);
+
+      vTaskDelay(5/portTICK_PERIOD_MS);
+    
+      //Ön sensörü ses dalgası üretmesi için aktif hale getir.
+      digitalWrite(on_trig, 1);
+    
+      //10 ms bekle
+      vTaskDelay(10/portTICK_PERIOD_MS);;
+    
+      //Ön sensörde yeni dalga üretilmemesi için pasif hale getir.
+      digitalWrite(on_trig, 0);
+    
+      //Ön sensöre ses dalgasının geri dönme süresi
+      on_sure = pulseIn(on_echo, 1);
+    
+      //Ölçülen süreleri uzaklığa çevir.
+      on_uzaklik = on_sure / 2 / 29.1;
+
+      Serial.print("on_uzaklik :");
+      Serial.println(on_uzaklik);
+
+      //Aracın önünde 10 cm'den yakın bir cisim varsa dur.
+      if(on_uzaklik < 10)
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+
+        //datayı sıfırladım.
+        data = 'z';
+      }
+    }
+
+    //Araç geri gidiyorsa arka sensörden bilgi al ve 15cm'den yakın bir cisim varsa dur.
+    else if(data == '2')
+    {
+      //Ön sensörü pasif hale getir.
+      digitalWrite(arka_trig, 0);
+
+      vTaskDelay(5/portTICK_PERIOD_MS);
+    
+      //Ön sensörü ses dalgası üretmesi için aktif hale getir.
+      digitalWrite(arka_trig, 1);
+    
+      //10 ms bekle
+      vTaskDelay(10/portTICK_PERIOD_MS);;
+    
+      //Ön sensörde yeni dalga üretilmemesi için pasif hale getir.
+      digitalWrite(arka_trig, 0);
+    
+      //Ön sensöre ses dalgasının geri dönme süresi
+      arka_sure = pulseIn(arka_echo, 1);
+    
+      //Ölçülen süreleri uzaklığa çevir.
+      arka_uzaklik = arka_sure / 2 / 29.1;
+
+      Serial.print("arka_uzaklik :");
+      Serial.println(arka_uzaklik);
+
+      //Aracın arkasında 10 cm'den yakın bir cisim varsa dur.
+      if(arka_uzaklik < 10)
+      {
+        //Dur
+        digitalWrite(sol_ileri, 0);
+        digitalWrite(sag_ileri, 0);
+        digitalWrite(sol_geri, 0);
+        digitalWrite(sag_geri, 0);
+        
+        analogWrite(sol_hiz, 0);
+        analogWrite(sag_hiz, 0);
+
+        //datayı sıfırladım.
+        data = 'z';
+      }
+    }
+
+    vTaskDelay(300/portTICK_PERIOD_MS);
+  }
+}
+
+void gorev4(void *pvParameters)
+{
+  vTaskDelay(300/portTICK_PERIOD_MS);
+  for(;;)
+  {
+    if(data == 'c')
+    {
+      //---- SAĞ ÖN SENSÖR ----
+      
+      //Ön sensörü pasif hale getir.
+      digitalWrite(sag_on_trig, 0);
+
+      vTaskDelay(5/portTICK_PERIOD_MS);
+    
+      //Ön sensörü ses dalgası üretmesi için aktif hale getir.
+      digitalWrite(sag_on_trig, 1);
+    
+      //10 ms bekle
+      vTaskDelay(10/portTICK_PERIOD_MS);;
+    
+      //Ön sensörde yeni dalga üretilmemesi için pasif hale getir.
+      digitalWrite(sag_on_trig, 0);
+    
+      //Ön sensöre ses dalgasının geri dönme süresi
+      sag_on_sure = pulseIn(sag_on_echo, 1);
+    
+      //Ölçülen süreleri uzaklığa çevir.
+      sag_on_uzaklik = sag_on_sure / 2 / 29.1;
+
+      Serial.print("sag_on_uzaklik :");
+      Serial.println(sag_on_uzaklik);
+
+      //---- SAĞ ARKA SENSÖR ----
+      
+      //Ön sensörü pasif hale getir.
+      digitalWrite(sag_arka_trig, 0);
+
+      vTaskDelay(5/portTICK_PERIOD_MS);
+    
+      //Ön sensörü ses dalgası üretmesi için aktif hale getir.
+      digitalWrite(sag_arka_trig, 1);
+    
+      //10 ms bekle
+      vTaskDelay(10/portTICK_PERIOD_MS);;
+    
+      //Ön sensörde yeni dalga üretilmemesi için pasif hale getir.
+      digitalWrite(sag_arka_trig, 0);
+    
+      //Ön sensöre ses dalgasının geri dönme süresi
+      sag_arka_sure = pulseIn(sag_arka_echo, 1);
+    
+      //Ölçülen süreleri uzaklığa çevir.
+      sag_arka_uzaklik = sag_arka_sure / 2 / 29.1;
+
+      Serial.print("sag_arka_uzaklik :");
+      Serial.println(sag_arka_uzaklik);
+    }
+
+    //Dik park koşulu. 
+    if(arac_boy < sag_on_uzaklik && arac_boy < sag_arka_uzaklik)
+    {
+
+      //sag_on_uzaklik ve sag_arka_uzaklik sıfırla
+      sag_on_uzaklik = 0;
+      sag_arka_uzaklik = 0;
+      
+      //Dur
+      digitalWrite(sol_ileri, 0);
+      digitalWrite(sag_ileri, 0);
+      digitalWrite(sol_geri, 0);
+      digitalWrite(sag_geri, 0);
+        
+      analogWrite(sol_hiz, 0);
+      analogWrite(sag_hiz, 0);
+
+      vTaskDelay(6/portTICK_PERIOD_MS);
+  
+      //Sağ
+      digitalWrite(sol_ileri, 1);
+      digitalWrite(sag_ileri, 0);
+      digitalWrite(sol_geri, 0);
+      digitalWrite(sag_geri, 1);
+        
+      analogWrite(sol_hiz, motorlar_hiz);
+      analogWrite(sag_hiz, motorlar_hiz);
+
+      //Sayacı başlat
+      data = 'b';
+    }
+
+    vTaskDelay(300/portTICK_PERIOD_MS);
+  }
+}
